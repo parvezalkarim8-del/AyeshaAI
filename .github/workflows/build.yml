@@ -1,3 +1,4 @@
+
 name: Build Ayesha AI APK
 
 on:
@@ -11,6 +12,7 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -22,7 +24,20 @@ jobs:
           cache: true
 
       - name: Generate Android project
-        run: flutter create --project-name ayesha_ai --platforms=android --org com.ayesha.ai .
+        run: flutter create --platforms=android --org com.ayesha.ai .
+
+      - name: Enable local backend connection
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path("android/app/src/main/AndroidManifest.xml")
+          s = p.read_text()
+          if "android.permission.INTERNET" not in s:
+              s = s.replace("<application", '<uses-permission android:name="android.permission.INTERNET"/>\\n    <application', 1)
+          if "android:usesCleartextTraffic" not in s:
+              s = s.replace("<application", '<application android:usesCleartextTraffic="true"', 1)
+          p.write_text(s)
+          PY
 
       - name: Get packages
         run: flutter pub get
